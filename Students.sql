@@ -75,8 +75,30 @@ INNER JOIN subject s ON s.subject_id=q.subject_id
 GROUP BY 1, 2
 HAVING Complexity IN ('the hardest','the easiest');
 
+--Educational programs for which the minimum score for each subject is greater than or equal to 40 points. Programs are sorted alphabetically.
+SELECT DISTINCT(name_program) FROM program_subject
+INNER JOIN program USING (program_id)
+WHERE program_id NOT IN(SELECT program_id FROM program_subject WHERE min_result < 40)
+ORDER BY name_program;
 
+--The number of additional points that each applicant will receive.
+SELECT name_enrollee, SUM(IF(bonus is Null, 0, bonus)) AS Bonus
+FROM enrollee e
+LEFT JOIN enrollee_achievement ea ON e.enrollee_id=ea.enrollee_id
+LEFT JOIN achievement a ON a.achievement_id=ea.achievement_id
 
+--The number of people who applied for each educational program and the competition for it.
+SELECT name_department, name_program, plan, COUNT(pe.enrollee_id) AS amount_e
+       ROUND(COUNT(pe.enrollee_id)/plan, 2) AS contest
+FROM department d 
+JOIN program p ON d.department_id=p.department_id
+JOIN program_enrollee pe ON pe.program_id=p.program_id
+GROUP BY 1, 2, 3
+ORDER BY 5 DESC;
+
+--Inclusion of a new integer column str_id in the applicant_order table (located before the first one).
+ALTER TABLE aplicant_order ADD str_id INT FIRST;
+SELECT * FROM aplicant_order
 
 
 
