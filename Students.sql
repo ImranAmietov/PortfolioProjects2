@@ -61,7 +61,7 @@ IF(ROUND(SUM(is_correct)/COUNT(t.answer_id)*100,2)=(SELECT b1.complexity
                                                            ORDER BY 3 ASC
                                                            LIMIT 1) b1), 'the hardest',
                                                      IF(ROUND(SUM(is_correct)/COUNT(t.answer_id)*100,2)=(SELECT b2.complexity
-                                                                               (SELECT name_subject, name_question,
+                                                                          FROM (SELECT name_subject, name_question,
                                                                                ROUND(SUM(is_correct)/COUNT(t.answer_id)*100,2) AS complexity
                                                                                FROM testin t INNER JOIN answer a USING(answer_id)
                                                                                  INNER JOIN question q ON q.question_id=t.question_id
