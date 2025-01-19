@@ -274,4 +274,30 @@ SELECT student_name, lesson, FROM_UNIXTIME(max_subm) AS max_submission_time,
 FROM time_max JOIN requirements USING(student_name)
 ORDER BY 1, 3;
 
+--For the student named student_59, the following information is displayed for all of his attempts:
+-- - step information
+-- - attempt ordinal number for each step
+-- - attempt result;
+-- - attempt time (converted to time format) - defined as the difference between the attempt submission time and its start time; if the attempt lasted more than 1 hour, then the attempt time is replaced by the average time of all user attempts for all steps, excluding those that lasted more than 1 hour;
+-- - relative attempt time - defined as the ratio of the attempt time (taking into account the attempt time replacement) to the total time of all step attempts, rounded to two decimal places.
+SET @avg_time = (SELECT AVG(submission_time-attempt_time)
+                 FROM step_student 
+                 WHERE ROUND(submission_time-attempt_time)<=3600 and student_id='59');
+                
+WITH b1 AS (SELECT student_name,s.step_id, st.result as Результат,
+            CONCAT(module_id,'.',lesson_position,'.',step_position) as step,
+            ROW_NUMBER() OVER(PARTITION BY step_id ORDER BY submission_time) as Attempt_number,
+              CASE 
+                 WHEN (submission_time-attempt_time)/3600<1 THEN submission_time-attempt_time
+                 ELSE ROUND(@avg_time,0)
+                 END AS attempt             
+               FROM lesson l 
+               JOIN step s  ON l.lesson_id=s.lesson_id
+               JOIN step_student st ON st.step_id=s.step_id
+               JOIN student ON st.student_id=student.student_id
+               WHERE student_name='student_59')
 
+SELECT student_name, step, attempt_number, result, SEC_TO_TIME(attempt) as time_attempt, 
+ROUND(attempt/ SUM(attempt) OVER(PARTITION BY step_id)*100, 2) AS Relative_time
+FROM b1
+ORDER BY step_id, attempt_number;
